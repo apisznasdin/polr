@@ -14,15 +14,23 @@ if (! function_exists('session')) {
      */
     function session($key = null, $default = null)
     {
+        if (app()->bound('request') && app('request')->hasSession()) {
+            $session = app('request')->session();
+        } elseif (app()->bound('session.store')) {
+            $session = app('session.store');
+        } else {
+            $session = app('session');
+        }
+
         if (is_null($key)) {
-            return app('session');
+            return $session;
         }
 
         if (is_array($key)) {
-            return app('session')->put($key);
+            return $session->put($key);
         }
 
-        return app('session')->get($key, $default);
+        return $session->get($key, $default);
     }
 }
 
@@ -34,9 +42,9 @@ if (! function_exists('csrf_token')) {
      */
     function csrf_token()
     {
-        $session = app('session');
+        $session = session();
 
-        if (isset($session)) {
+        if ($session && method_exists($session, 'token')) {
             return $session->token();
         }
 
