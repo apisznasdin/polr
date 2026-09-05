@@ -52,6 +52,91 @@
                     'table_id' => 'admin_links_table'
                 ])
 
+                <div class="housekeeping-section" style="margin-top: 25px; margin-bottom: 25px;">
+                    <h3>Link Housekeeping & Spam Cleanup</h3>
+                    <p class="text-muted">Search, preview, and bulk disable or delete spam and ambiguous destination URLs.</p>
+                    <a ng-click="state.showHousekeepingWell = !state.showHousekeepingWell" class="btn btn-warning btn-sm status-display">
+                        <span ng-if="!state.showHousekeepingWell">Open Spam Cleaner</span><span ng-if="state.showHousekeepingWell">Close Cleaner</span>
+                    </a>
+
+                    <div ng-if="state.showHousekeepingWell" class="well" style="margin-top: 15px;">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Domain / Keyword:</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="housekeeping.pattern" placeholder="e.g. spam-site.com, *.xyz, or telegram.me">
+                                </div>
+                                <div class="col-sm-4">
+                                    <select class="form-control" ng-model="housekeeping.matchType">
+                                        <option value="domain">Domain / Host Match</option>
+                                        <option value="contains">URL Contains Substring</option>
+                                        <option value="exact">Exact URL Match</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Scope Filter:</label>
+                                <div class="col-sm-4">
+                                    <select class="form-control" ng-model="housekeeping.scope">
+                                        <option value="all">All Links</option>
+                                        <option value="anon">Anonymous Links Only</option>
+                                    </select>
+                                </div>
+                                <label class="col-sm-2 control-label">Action:</label>
+                                <div class="col-sm-4">
+                                    <select class="form-control" ng-model="housekeeping.actionType">
+                                        <option value="disable">Disable Links (Safe - Blocks Traffic)</option>
+                                        <option value="delete">Permanently Delete Links & Stats</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button type="button" class="btn btn-info" ng-click="previewHousekeeping()" ng-disabled="!housekeeping.pattern || housekeeping.loading">
+                                        Preview Matching Links
+                                    </button>
+                                    <button type="button" class="btn btn-danger" ng-click="executeHousekeeping()" ng-disabled="!housekeeping.pattern || housekeeping.loading" style="margin-left: 10px;">
+                                        Run Cleanup
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div ng-if="housekeeping.previewLoaded" style="margin-top: 15px;">
+                            <hr>
+                            <h4>Matches Found: <span class="label label-danger">@{{ housekeeping.previewCount }}</span></h4>
+                            <div ng-if="housekeeping.previewCount > 0" class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                <table class="table table-bordered table-striped table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <th>Short URL</th>
+                                            <th>Long URL</th>
+                                            <th>Creator</th>
+                                            <th>Clicks</th>
+                                            <th>Status</th>
+                                            <th>Created At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="item in housekeeping.previewSample">
+                                            <td><a href="/@{{ item.short_url }}" target="_blank">@{{ item.short_url }}</a></td>
+                                            <td class="wrap-text" style="word-break: break-all; max-width: 300px;">@{{ item.long_url }}</td>
+                                            <td>@{{ item.creator || 'Anonymous' }}</td>
+                                            <td>@{{ item.clicks }}</td>
+                                            <td>
+                                                <span class="label" ng-class="{'label-danger': item.is_disabled, 'label-success': !item.is_disabled}">
+                                                    @{{ item.is_disabled ? 'Disabled' : 'Active' }}
+                                                </span>
+                                            </td>
+                                            <td>@{{ item.created_at }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <h3 class="users-heading">Users</h3>
                 <a ng-click="state.showNewUserWell = !state.showNewUserWell" class="btn btn-primary btn-sm status-display">New</a>
 

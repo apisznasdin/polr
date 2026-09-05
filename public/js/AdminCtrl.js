@@ -89,7 +89,18 @@ polr.directive('editUserApiInfoModal', function () {
 polr.controller('AdminCtrl', function($scope, $compile, $timeout) {
     /* Initialize $scope variables */
     $scope.state = {
-        showNewUserWell: false
+        showNewUserWell: false,
+        showHousekeepingWell: false
+    };
+    $scope.housekeeping = {
+        pattern: '',
+        matchType: 'domain',
+        scope: 'all',
+        actionType: 'disable',
+        previewLoaded: false,
+        previewCount: 0,
+        previewSample: [],
+        loading: false
     };
     $scope.datatables = {};
     $scope.modals = {
@@ -301,6 +312,64 @@ polr.controller('AdminCtrl', function($scope, $compile, $timeout) {
 
         $timeout(function () {
             $('#edit-user-api-info-' + user_id).modal('show');
+        });
+    };
+
+    /*
+        Link Housekeeping & Spam Cleanup
+    */
+    $scope.previewHousekeeping = function() {
+        if (!$scope.housekeeping.pattern) {
+            toastr.error("Please enter a domain or pattern to match.", "Error");
+            return;
+        }
+
+        $scope.housekeeping.loading = true;
+        apiCall('admin/housekeeping/preview', {
+            'pattern': $scope.housekeeping.pattern,
+            'match_type': $scope.housekeeping.matchType,
+            'scope': $scope.housekeeping.scope
+        }, function(data) {
+            $scope.housekeeping.loading = false;
+            $scope.housekeeping.previewLoaded = true;
+            $scope.housekeeping.previewCount = data.count;
+            $scope.housekeeping.previewSample = data.sample;
+            $scope.$digest();
+        }, function() {
+            $scope.housekeeping.loading = false;
+            toastr.error("Failed to load matching links preview.", "Error");
+            $scope.$digest();
+        });
+    };
+
+    $scope.executeHousekeeping = function() {
+        if (!$scope.housekeeping.pattern) {
+            toastr.error("Please enter a domain or pattern to match.", "Error");
+            return;
+        }
+
+        var actionWord = $scope.housekeeping.actionType === 'delete' ? 'permanently DELETE' : 'DISABLE';
+        var confirmMsg = 'Are you sure you want to ' + actionWord + ' all links matching "' + $scope.housekeeping.pattern + '"?';
+        if (!window.confirm(confirmMsg)) {
+            return;
+        }
+
+        $scope.housekeeping.loading = true;
+        apiCall('admin/housekeeping/clean', {
+            'pattern': $scope.housekeeping.pattern,
+            'match_type': $scope.housekeeping.matchType,
+            'scope': $scope.housekeeping.scope,
+            'action_type': $scope.housekeeping.actionType
+        }, function(data) {
+            $scope.housekeeping.loading = false;
+            $scope.housekeeping.previewLoaded = false;
+            toastr.success('Housekeeping complete: ' + data.affected + ' link(s) ' + (data.action === 'delete' ? 'deleted' : 'disabled') + '.', 'Success');
+            $scope.reloadLinkTables();
+            $scope.$digest();
+        }, function() {
+            $scope.housekeeping.loading = false;
+            toastr.error("Failed to execute link cleanup.", "Error");
+            $scope.$digest();
         });
     };
 

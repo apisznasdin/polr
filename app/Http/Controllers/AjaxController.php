@@ -6,6 +6,8 @@ use App\Helpers\LinkHelper;
 use App\Helpers\CryptoHelper;
 use App\Helpers\UserHelper;
 use App\Models\User;
+use App\Models\Link;
+use App\Models\Click;
 use App\Factories\UserFactory;
 
 class AjaxController extends Controller {
@@ -252,5 +254,92 @@ class AjaxController extends Controller {
         $link->long_url = $new_long_url;
         $link->save();
         return "OK";
+    }
+
+    protected function buildHousekeepingQuery(Request $request) {
+        $pattern = trim($request->input('pattern', ''));
+        $match_type = $request->input('match_type', 'domain');
+        $scope = $request->input('scope', 'all');
+
+        $query = Link::query();
+
+        if ($scope === 'anon') {
+            $query->where(function ($q) {
+                $q->whereNull('creator')
+                  ->orWhere('creator', '')
+                  ->orWhere('creator', 'polr');
+            });
+        }
+
+        if (!empty($pattern)) {
+            if ($match_type === 'domain') {
+                $cleanedPattern = ltrim($pattern, '*.');
+                $query->where(function ($q) use ($cleanedPattern) {
+                    $q->where('long_url', 'LIKE', '%' . $cleanedPattern . '%');
+                });
+            } elseif ($match_type === 'contains') {
+                $query->where('long_url', 'LIKE', '%' . $pattern . '%');
+            } elseif ($match_type === 'exact') {
+                $query->where('long_url', '=', $pattern);
+            }
+        }
+
+        return $query;
+    }
+
+    public function previewHousekeepingLinks(Request $request) {
+        self::ensureAdmin();
+
+        $this->validate($request, [
+            'pattern' => 'required|string|min:2',
+        ]);
+
+        $query = $this->buildHousekeepingQuery($request);
+        $count = $query->count();
+        $sample = $query->select(['id', 'short_url', 'long_url', 'clicks', 'created_at', 'creator', 'is_disabled'])
+            ->orderBy('id', 'desc')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'count' => $count,
+            'sample' => $sample,
+        ]);
+    }
+
+    public function performHousekeepingClean(Request $request) {
+        self::ensureAdmin();
+
+        $this->validate($request, [
+            'pattern' => 'required|string|min:2',
+            'action_type' => 'required|in:disable,delete',
+        ]);
+
+        $action_type = $request->input('action_type');
+        $query = $this->buildHousekeepingQuery($request);
+
+        if ($action_type === 'disable') {
+            $affected = $query->update(['is_disabled' => 1]);
+            return response()->json([
+                'status' => 'success',
+                'action' => 'disable',
+                'affected' => $affected,
+            ]);
+        } elseif ($action_type === 'delete') {
+            $linkIds = $query->pluck('id')->all();
+            if (!empty($linkIds)) {
+                Click::whereIn('link_id', $linkIds)->delete();
+                $affected = Link::whereIn('id', $linkIds)->delete();
+            } else {
+                $affected = 0;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'action' => 'delete',
+                'affected' => $affected,
+            ]);
+        }
     }
 }
