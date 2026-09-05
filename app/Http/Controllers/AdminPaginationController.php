@@ -131,11 +131,11 @@ class AdminPaginationController extends Controller {
 
         $admin_users = User::select(['username', 'email', 'created_at', 'active', 'api_key', 'api_active', 'api_quota', 'role', 'id']);
         return DataTables::of($admin_users)
-            ->addColumn('api_action', [$this, 'renderAdminApiActionCell'])
-            ->addColumn('toggle_active', [$this, 'renderToggleUserActiveCell'])
-            ->addColumn('change_role', [$this, 'renderChangeUserRoleCell'])
-            ->addColumn('delete', [$this, 'renderDeleteUserCell'])
-            ->escapeColumns(['username', 'email'])
+            ->addColumn('api_action', fn($user) => $this->renderAdminApiActionCell($user))
+            ->addColumn('toggle_active', fn($user) => $this->renderToggleUserActiveCell($user))
+            ->addColumn('change_role', fn($user) => $this->renderChangeUserRoleCell($user))
+            ->addColumn('delete', fn($user) => $this->renderDeleteUserCell($user))
+            ->rawColumns(['api_action', 'toggle_active', 'change_role', 'delete'])
             ->make(true);
     }
 
@@ -144,11 +144,11 @@ class AdminPaginationController extends Controller {
 
         $admin_links = Link::select(['short_url', 'long_url', 'clicks', 'created_at', 'creator', 'is_disabled']);
         return DataTables::of($admin_links)
-            ->addColumn('disable', [$this, 'renderToggleLinkActiveCell'])
-            ->addColumn('delete', [$this, 'renderDeleteLinkCell'])
-            ->editColumn('clicks', [$this, 'renderClicksCell'])
-            ->editColumn('long_url', [$this, 'renderLongUrlCell'])
-            ->escapeColumns(['short_url', 'creator'])
+            ->addColumn('disable', fn($link) => $this->renderToggleLinkActiveCell($link))
+            ->addColumn('delete', fn($link) => $this->renderDeleteLinkCell($link))
+            ->editColumn('clicks', fn($link) => $this->renderClicksCell($link))
+            ->editColumn('long_url', fn($link) => $this->renderLongUrlCell($link))
+            ->rawColumns(['disable', 'delete', 'clicks', 'long_url'])
             ->make(true);
     }
 
@@ -160,9 +160,9 @@ class AdminPaginationController extends Controller {
             ->select(['id', 'short_url', 'long_url', 'clicks', 'created_at']);
 
         return DataTables::of($user_links)
-            ->editColumn('clicks', [$this, 'renderClicksCell'])
-            ->editColumn('long_url', [$this, 'renderLongUrlCell'])
-            ->escapeColumns(['short_url'])
+            ->editColumn('clicks', fn($link) => $this->renderClicksCell($link))
+            ->editColumn('long_url', fn($link) => $this->renderLongUrlCell($link))
+            ->rawColumns(['clicks', 'long_url'])
             ->make(true);
     }
 }
