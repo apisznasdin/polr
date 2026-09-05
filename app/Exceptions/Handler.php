@@ -2,7 +2,7 @@
 
 namespace App\Exceptions;
 
-use Exception;
+use Throwable;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
@@ -25,23 +25,38 @@ class Handler extends ExceptionHandler {
      *
      * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
      *
-     * @param  \Exception  $e
+     * @param  \Throwable  $e
      * @return void
      */
-    public function report(Exception $e)
+    public function report(Throwable $e)
     {
-        return parent::report($e);
+        parent::report($e);
     }
 
     /**
      * Render an exception into an HTTP response.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $e
-     * @return \Illuminate\Http\Response
+     * @param  \Throwable  $e
+     * @return \Illuminate\Http\Response|\Symfony\Component\HttpFoundation\Response
      */
-    public function render($request, Exception $e)
+    public function render($request, Throwable $e)
     {
+        if ($e instanceof ApiException) {
+            // Handle HTTP exceptions thrown by API controllers
+            $status_code = $e->getCode() ?: 400;
+            $encoded_status_message = $e->getEncodedErrorMessage();
+            if ($e->response_type == 'json') {
+                return response($encoded_status_message, $status_code)
+                    ->header('Content-Type', 'application/json')
+                    ->header('Access-Control-Allow-Origin', '*');
+            }
+
+            return response($encoded_status_message, $status_code)
+                ->header('Content-Type', 'text/plain')
+                ->header('Access-Control-Allow-Origin', '*');
+        }
+
         if (env('APP_DEBUG') != true) {
             // Render nice error pages if debug is off
             if ($e instanceof NotFoundHttpException) {
@@ -71,22 +86,9 @@ class Handler extends ExceptionHandler {
                         ]), $status_code);
                 }
             }
-            if ($e instanceof ApiException) {
-                // Handle HTTP exceptions thrown by API controllers
-                $status_code = $e->getCode();
-                $encoded_status_message = $e->getEncodedErrorMessage();
-                if ($e->response_type == 'json') {
-                    return response($encoded_status_message, $status_code)
-                        ->header('Content-Type', 'application/json')
-                        ->header('Access-Control-Allow-Origin', '*');
-                }
-
-                return response($encoded_status_message, $status_code)
-                    ->header('Content-Type', 'text/plain')
-                    ->header('Access-Control-Allow-Origin', '*');
-            }
         }
 
         return parent::render($request, $e);
     }
 }
+

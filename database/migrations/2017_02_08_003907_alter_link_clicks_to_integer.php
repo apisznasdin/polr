@@ -16,7 +16,7 @@ class AlterLinkClicksToInteger extends Migration
     {
         Schema::table('links', function (Blueprint $table)
         {
-            $table->integer('clicks')->change();
+            $table->integer('clicks')->default(0)->change();
         });
     }
 

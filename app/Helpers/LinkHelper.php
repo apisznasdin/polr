@@ -103,7 +103,7 @@ class LinkHelper {
 
         while ($in_use) {
             // Generate a new string until the ending is not in use
-            $pr_str = str_random(env('_PSEUDO_RANDOM_KEY_LENGTH'));
+            $pr_str = \Illuminate\Support\Str::random(env('_PSEUDO_RANDOM_KEY_LENGTH'));
             $in_use = LinkHelper::linkExists($pr_str);
         }
 

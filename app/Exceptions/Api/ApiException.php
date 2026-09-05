@@ -1,7 +1,19 @@
 <?php
 namespace App\Exceptions\Api;
 
+use Throwable;
+
 class ApiException extends \Exception {
+    /**
+     * @var string
+     */
+    public $response_type;
+
+    /**
+     * @var string
+     */
+    public $text_code;
+
     /**
      * Catch an API exception.
      *
@@ -9,11 +21,11 @@ class ApiException extends \Exception {
      * @param string $message
      * @param integer $status_code
      * @param string $response_type
-     * @param \Exception $previous
+     * @param \Throwable|null $previous
      *
      * @return mixed
      */
-    public function __construct($text_code='SERVER_ERROR', $message, $status_code = 0, $response_type='plain_text', Exception $previous = null) {
+    public function __construct($text_code = 'SERVER_ERROR', $message = '', $status_code = 0, $response_type = 'plain_text', ?Throwable $previous = null) {
         $this->response_type = $response_type;
         $this->text_code = $text_code;
         parent::__construct($message, $status_code, $previous);
@@ -38,3 +50,4 @@ class ApiException extends \Exception {
         }
     }
 }
+

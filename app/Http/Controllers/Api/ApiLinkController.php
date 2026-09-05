@@ -21,7 +21,7 @@ class ApiLinkController extends ApiController {
 
     public function shortenLink(Request $request) {
         $response_type = $request->input('response_type');
-        $user = $request->user;
+        $user = $request->user() ?: $request->attributes->get('user');
 
         $validator = \Validator::make(array_merge([
             'url' => str_replace(' ', '%20', $request->input('url'))
@@ -49,7 +49,7 @@ class ApiLinkController extends ApiController {
         $response_type = $request->input('response_type', 'json');
         $request_data = $request->input('data');
 
-        $user = $request->user;
+        $user = $request->user() ?: $request->attributes->get('user');
         $link_ip = $request->ip();
         $username = $user->username;
 
@@ -80,8 +80,8 @@ class ApiLinkController extends ApiController {
         foreach ($links_array as $link) {
             $formatted_link = $this->getShortenedLink(
                 $link['url'],
-                (array_get($link, 'is_secret') == 'true' ? true : false),
-                array_get($link, 'custom_ending'),
+                (\Illuminate\Support\Arr::get($link, 'is_secret') == 'true' ? true : false),
+                \Illuminate\Support\Arr::get($link, 'custom_ending'),
                 $link_ip,
                 $username,
                 $response_type
@@ -99,7 +99,7 @@ class ApiLinkController extends ApiController {
     }
 
     public function lookupLink(Request $request) {
-        $user = $request->user;
+        $user = $request->user() ?: $request->attributes->get('user');
         $response_type = $request->input('response_type');
 
         // Validate URL form data

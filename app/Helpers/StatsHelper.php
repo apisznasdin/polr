@@ -8,7 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class StatsHelper {
-    function __construct($link_id, $left_bound, $right_bound) {
+    public $link_id;
+    public $left_bound_parsed;
+    public $right_bound_parsed;
+
+    public function __construct($link_id, $left_bound, $right_bound) {
         $this->link_id = $link_id;
         $this->left_bound_parsed = Carbon::parse($left_bound);
         $this->right_bound_parsed = Carbon::parse($right_bound);
@@ -47,9 +51,18 @@ class StatsHelper {
         // Return stats by day from the last 30 days
         // date => x
         // clicks => y
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $dateFormat = "strftime('%Y-%m-%d', created_at)";
+        } elseif ($driver === 'pgsql') {
+            $dateFormat = "TO_CHAR(created_at, 'YYYY-MM-DD')";
+        } else {
+            $dateFormat = "DATE_FORMAT(created_at, '%Y-%m-%d')";
+        }
+
         $stats = $this->getBaseRows()
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d') AS x, count(*) AS y"))
-            ->groupBy(DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d')"))
+            ->select(DB::raw("{$dateFormat} AS x, count(*) AS y"))
+            ->groupBy(DB::raw($dateFormat))
             ->orderBy('x', 'asc')
             ->get();
 

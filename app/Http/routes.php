@@ -43,7 +43,7 @@ $app->post('/reset_password/{username}/{recovery_key}', ['as' => 'preset_passwor
 
 $app->post('/admin/action/change_password', ['as' => 'change_password', 'uses' => 'AdminController@changePassword']);
 
-$app->group(['prefix' => '/api/v2', 'namespace' => 'App\Http\Controllers'], function ($app) {
+$app->group(['prefix' => '/api/v2'], function ($app) {
     /* API internal endpoints */
     $app->post('link_avail_check', ['as' => 'api_link_check', 'uses' => 'AjaxController@checkLinkAvailability']);
     $app->post('admin/toggle_api_active', ['as' => 'api_toggle_api_active', 'uses' => 'AjaxController@toggleAPIActive']);
@@ -62,7 +62,7 @@ $app->group(['prefix' => '/api/v2', 'namespace' => 'App\Http\Controllers'], func
     $app->get('admin/get_user_links', ['as' => 'api_get_user_links', 'uses' => 'AdminPaginationController@paginateUserLinks']);
 });
 
-$app->group(['prefix' => '/api/v2', 'namespace' => 'App\Http\Controllers\Api', 'middleware' => 'api'], function ($app) {
+$app->group(['prefix' => '/api/v2', 'namespace' => 'Api', 'middleware' => 'api'], function ($app) {
     /* API shorten endpoints */
     $app->post('action/shorten', ['as' => 'api_shorten_url', 'uses' => 'ApiLinkController@shortenLink']);
     $app->get('action/shorten', ['as' => 'api_shorten_url', 'uses' => 'ApiLinkController@shortenLink']);

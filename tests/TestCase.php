@@ -1,6 +1,6 @@
 <?php
-use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Laravel\Lumen\Testing\DatabaseMigrations;
+use Laravel\Lumen\Testing\DatabaseTransactions;
 
 class TestCase extends Laravel\Lumen\Testing\TestCase
 {
@@ -9,9 +9,10 @@ class TestCase extends Laravel\Lumen\Testing\TestCase
      *
      * @return \Laravel\Lumen\Application
      */
-    use DatabaseTransactions;
+    use DatabaseMigrations;
 
     public function createApplication() {
         return require __DIR__.'/../bootstrap/app.php';
     }
 }
+

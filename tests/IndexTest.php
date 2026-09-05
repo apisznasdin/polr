@@ -8,10 +8,13 @@ class IndexTest extends TestCase
      * @return void
      */
     public function testIndex() {
-        $this->visit('/')
-             ->see('<h1 class=\'title\'>'. env('APP_NAME') .'</h1>') // Ensure page loads correctly
-             ->see('<meta name="csrf-token"') // Ensure CSRF protection is enabled
-             ->see('>Sign In</a>') // Ensure log in buttons are shown when user is logged out
-             ->dontSee('SQLSTATE'); // Ensure database connection is correct
+        $response = $this->call('GET', '/');
+        $this->assertEquals(200, $response->getStatusCode());
+        $content = $response->getContent();
+        $this->assertStringContainsString('<h1 class=\'title\'>'. env('APP_NAME') .'</h1>', $content);
+        $this->assertStringContainsString('<meta name="csrf-token"', $content);
+        $this->assertStringContainsString('>Sign In</a>', $content);
+        $this->assertStringNotContainsString('SQLSTATE', $content);
     }
 }
+

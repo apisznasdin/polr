@@ -23,7 +23,7 @@ class UserFactory {
         $user->active = $active;
         $user->ip = $ip;
         $user->role = $role;
-        $user->api_key = $api_key;
+        $user->api_key = $api_key ?: null;
         $user->api_active = $api_active;
 
         $user->save();

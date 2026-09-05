@@ -1,8 +1,11 @@
 <?php
 
 require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__.'/../app/helpers.php';
 
-Dotenv::load(__DIR__.'/../');
+(new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
+    dirname(__DIR__)
+))->bootstrap();
 
 /*
 |--------------------------------------------------------------------------
@@ -19,9 +22,21 @@ $app = new Laravel\Lumen\Application(
     realpath(__DIR__.'/../')
 );
 
-$app->withFacades();
+$app->withFacades(true, [
+    \Illuminate\Support\Facades\Session::class => 'Session',
+    \Illuminate\Support\Facades\Cookie::class => 'Cookie',
+    \Illuminate\Support\Facades\Mail::class => 'Mail',
+    \Illuminate\Support\Facades\Hash::class => 'Hash',
+    \Illuminate\Support\Facades\Artisan::class => 'Artisan',
+    \Illuminate\Support\Str::class => 'Str',
+    \Illuminate\Support\Arr::class => 'Arr',
+]);
 $app->withEloquent();
 
+$app->configure('app');
+$app->configure('database');
+$app->configure('session');
+$app->configure('mail');
 $app->configure('geoip');
 
 /*
@@ -58,8 +73,7 @@ $app->singleton(
 
 $app->middleware([
     Illuminate\Cookie\Middleware\EncryptCookies::class,
-    // Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-    Illuminate\Session\Middleware\StartSession::class,
+    App\Http\Middleware\StartSession::class,
     Illuminate\View\Middleware\ShareErrorsFromSession::class,
     App\Http\Middleware\VerifyCsrfToken::class,
 ]);
@@ -79,10 +93,12 @@ $app->routeMiddleware([
 |
 */
 
+$app->register(\Illuminate\Session\SessionServiceProvider::class);
+$app->register(\Illuminate\Cookie\CookieServiceProvider::class);
+$app->register(\Illuminate\Mail\MailServiceProvider::class);
 $app->register(App\Providers\AppServiceProvider::class);
-$app->register(\Yajra\Datatables\DatatablesServiceProvider::class);
+$app->register(\Yajra\DataTables\DataTablesServiceProvider::class);
 $app->register(\Torann\GeoIP\GeoIPServiceProvider::class);
-// $app->register(App\Providers\EventServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -95,9 +111,11 @@ $app->register(\Torann\GeoIP\GeoIPServiceProvider::class);
 |
 */
 
-$app->group(['namespace' => 'App\Http\Controllers'], function ($app) {
+$app->router->group(['namespace' => 'App\Http\Controllers'], function ($router) {
+    $app = $router;
     require __DIR__.'/../app/Http/routes.php';
 });
 
 
 return $app;
+

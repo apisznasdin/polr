@@ -95,9 +95,13 @@ class LinkFactory {
         $link->is_custom = $custom_ending != null;
 
         $link->is_api    = $is_api;
+        $link->clicks    = 0;
 
         if ($creator) {
             $link->creator = $creator;
+        }
+        else {
+            $link->creator = '';
         }
 
         if ($is_secret) {
@@ -107,6 +111,7 @@ class LinkFactory {
         }
         else {
             $secret_key = false;
+            $link->secret_key = '';
         }
 
         $link->save();

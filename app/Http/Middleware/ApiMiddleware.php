@@ -57,7 +57,11 @@ class ApiMiddleware {
      */
 
     public function handle($request, Closure $next) {
-        $request->user = $this->getApiUserInfo($request);
+        $user = $this->getApiUserInfo($request);
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
+        $request->attributes->set('user', $user);
 
         return $next($request);
     }

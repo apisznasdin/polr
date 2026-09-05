@@ -11,11 +11,12 @@
 |
 */
 
-$factory->define(App\User::class, function ($faker) {
+$factory->define(App\Models\User::class, function ($faker) {
     return [
         'name' => $faker->name,
         'email' => $faker->email,
-        'password' => str_random(10),
-        'remember_token' => str_random(10),
+        'password' => \Illuminate\Support\Str::random(10),
+        'remember_token' => \Illuminate\Support\Str::random(10),
     ];
 });
+
